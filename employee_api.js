@@ -1,46 +1,53 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
 app.use(express.json());
 
-let employees = [];
+mongoose.connect('mongodb://localhost/employees', { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('Connected to MongoDB...'))
+    .catch(err => console.error('Could not connect to MongoDB...', err));
+
+const employeeSchema = new mongoose.Schema({
+    name: String
+});
+
+const Employee = mongoose.model('Employee', employeeSchema);
 
 // Get all employees
-app.get('/employees', (req, res) => {
-    res.json(employees);
+app.get('/employees', async (req, res) => {
+    const employees = await Employee.find();
+    res.send(employees);
 });
 
 // Get a specific employee
-app.get('/employees/:id', (req, res) => {
-    const employee = employees.find(emp => emp.id === parseInt(req.params.id));
+app.get('/employees/:id', async (req, res) => {
+    const employee = await Employee.findById(req.params.id);
     if (!employee) return res.status(404).send('Employee not found');
-    res.json(employee);
+    res.send(employee);
 });
 
 // Add a new employee
-app.post('/employees', (req, res) => {
-    const employee = {
-        id: employees.length + 1,
-        name: req.body.name
-    };
-    employees.push(employee);
-    res.json(employee);
+app.post('/employees', async (req, res) => {
+    let employee = new Employee({ name: req.body.name });
+    employee = await employee.save();
+    res.send(employee);
 });
 
 // Update an existing employee
-app.put('/employees/:id', (req, res) => {
-    const employee = employees.find(emp => emp.id === parseInt(req.params.id));
+app.put('/employees/:id', async (req, res) => {
+    const employee = await Employee.findByIdAndUpdate(req.params.id, { name: req.body.name }, {
+        new: true
+    });
+
     if (!employee) return res.status(404).send('Employee not found');
-    employee.name = req.body.name;
-    res.json(employee);
+    res.send(employee);
 });
 
 // Delete an employee
-app.delete('/employees/:id', (req, res) => {
-    const employee = employees.find(emp => emp.id === parseInt(req.params.id));
+app.delete('/employees/:id', async (req, res) => {
+    const employee = await Employee.findByIdAndRemove(req.params.id);
     if (!employee) return res.status(404).send('Employee not found');
-    const index = employees.indexOf(employee);
-    employees.splice(index, 1);
-    res.json(employee);
+    res.send(employee);
 });
 
 const port = process.env.PORT || 3000;
