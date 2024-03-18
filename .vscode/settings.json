@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "Nautilus",
+        "projectKey": "SonarSource-Demos_employee-api_0b28787e-ce42-48a9-b6d9-405ed9230517"
+    }
+}
